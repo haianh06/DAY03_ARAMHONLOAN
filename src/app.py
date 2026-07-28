@@ -150,10 +150,12 @@ def run_react_agent(user_query: str, provider):
                 st.success(f"👁️ **Observation**: \n{obs}")
                 history_prompt += f"Observation: {obs}\n"
             else:
-                # Nếu LLM không ra lệnh gì và không Final Answer, ép kết thúc
                 if "Final Answer:" not in response:
-                    status.update(label="Hoàn tất!", state="complete", expanded=False)
-                    return response
+                    # Nếu LLM lỡ quên cú pháp, nhắc nhở nó thay vì thoát ngay
+                    obs = "LỖI CÚ PHÁP: Bạn phải dùng 'Action: tên_tool[args]' để gọi hàm, hoặc 'Final Answer: câu trả lời' để kết thúc. Không được nói chuyện tự do. Hãy sinh lại câu trả lời với Final Answer: và liệt kê đầy đủ kết quả."
+                    history_prompt += f"Observation: {obs}\n"
+                    st.write(f"👁️\n**Observation**: {obs}")
+                    continue
                     
         status.update(label="Đã quá giới hạn bước!", state="error", expanded=False)
         return "🛡️ GUARDRAIL TRIGGERED: Vượt quá số bước suy luận tối đa."

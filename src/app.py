@@ -117,14 +117,15 @@ def run_react_agent(user_query: str, provider):
             response = provider.generate(history_prompt, system_prompt=REACT_SYSTEM_PROMPT)
             history_prompt += f"{response}\n"
             
-            # In ra các dòng Thought / Final Answer
-            lines = response.split('\n')
-            for line in lines:
+            # In ra các dòng Thought
+            for line in response.split('\n'):
                 if line.startswith("Thought:"):
                     st.info(f"🧠 {line}")
-                elif line.startswith("Final Answer:"):
-                    status.update(label="Hoàn tất!", state="complete", expanded=False)
-                    return line.replace("Final Answer:", "").strip()
+                    
+            if "Final Answer:" in response:
+                status.update(label="Hoàn tất!", state="complete", expanded=False)
+                # Lấy toàn bộ phần chữ từ Final Answer trở đi (hỗ trợ multi-line)
+                return response.split("Final Answer:", 1)[1].strip()
             
             # Tìm Action
             tool_name, params = parse_action(response)

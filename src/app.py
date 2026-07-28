@@ -153,7 +153,7 @@ def run_react_agent(user_query: str, provider):
             else:
                 if "Final Answer:" not in response:
                     # Nếu LLM lỡ quên cú pháp, nhắc nhở nó thay vì thoát ngay
-                    obs = "LỖI CÚ PHÁP: Bạn phải dùng 'Action: tên_tool[args]' để gọi hàm, hoặc 'Final Answer: câu trả lời' để kết thúc. Không được nói chuyện tự do. Hãy sinh lại câu trả lời với Final Answer: và liệt kê đầy đủ kết quả."
+                    obs = "LỖI CÚ PHÁP: Bạn phải dùng 'Action: tên_tool[args]' để gọi hàm, hoặc bắt đầu câu trả lời bằng 'Final Answer: <nội dung>' để kết thúc. Không được nói chuyện tự do. Hãy viết lại câu trả lời của bạn, nhớ thêm 'Final Answer: ' ở đầu câu."
                     history_prompt += f"Observation: {obs}\n"
                     st.write(f"👁️\n**Observation**: {obs}")
                     continue

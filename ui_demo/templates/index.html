@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rental ReAct</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="mobile-bar">
+    <button class="icon-button" id="openSidebarBtn" type="button" aria-label="Mở menu">☰</button>
+    <strong>Rental ReAct</strong>
+    <span class="mini-status" id="mobileStatus">Connected</span>
+  </div>
+
+  <div class="backdrop" id="sidebarBackdrop"></div>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">
+          <span></span>
+        </div>
+        <div>
+          <h1>Rental ReAct</h1>
+          <p>AI Rental Assistant</p>
+        </div>
+        <button class="icon-button sidebar-close" id="closeSidebarBtn" type="button" aria-label="Đóng menu">×</button>
+      </div>
+
+      <section class="sidebar-card status-panel" id="healthPanel">
+        <div class="status-row">
+          <span class="pulse-dot"></span>
+          <div>
+            <strong id="healthStatus">Connected</strong>
+            <span id="providerLabel">{{ provider }} · {{ model }}</span>
+          </div>
+        </div>
+        {% if init_error %}
+        <p class="inline-error">{{ init_error }}</p>
+        {% endif %}
+      </section>
+
+      <section class="sidebar-card">
+        <div class="panel-title">
+          <span>Chế độ</span>
+          <span class="tiny-badge" id="selectedModeText">Agent</span>
+        </div>
+        <div class="mode-selector" role="radiogroup" aria-label="Chọn chế độ chạy">
+          <button class="mode-option" type="button" data-mode="baseline" aria-pressed="false">
+            <span class="mode-indicator"></span>
+            <span class="mode-copy">
+              <strong>Baseline</strong>
+              <small>Tư vấn kiến thức chung, không gọi công cụ</small>
+            </span>
+          </button>
+          <button class="mode-option" type="button" data-mode="agent" aria-pressed="true">
+            <span class="mode-indicator"></span>
+            <span class="mode-copy">
+              <strong>ReAct Agent</strong>
+              <small>Có thể tìm phòng, kiểm tra lịch và đặt lịch</small>
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <section class="sidebar-card test-browser">
+        <div class="panel-title">
+          <span>Test cases</span>
+          <span class="tiny-badge" id="caseCount">0</span>
+        </div>
+        <label class="sr-only" for="caseSearch">Tìm test case</label>
+        <input id="caseSearch" class="search-input" type="search" placeholder="Tìm theo ID hoặc câu hỏi">
+        <div class="filter-row" id="caseFilters" aria-label="Lọc test case">
+          <button class="filter-chip active" type="button" data-filter="all">Tất cả</button>
+          <button class="filter-chip" type="button" data-filter="llm">LLM</button>
+          <button class="filter-chip" type="button" data-filter="multi">Multi-step</button>
+          <button class="filter-chip" type="button" data-filter="guardrail">Guardrail</button>
+        </div>
+        <div class="case-list" id="caseList" aria-live="polite"></div>
+        <button class="button secondary full" id="runCaseBtn" type="button">Chạy test case đã chọn</button>
+      </section>
+
+      <section class="sidebar-card">
+        <div class="panel-title">
+          <span>Gợi ý nhanh</span>
+        </div>
+        <div class="quick-prompts" id="quickPrompts"></div>
+      </section>
+    </aside>
+
+    <main class="workspace">
+      <header class="hero">
+        <div>
+          <span class="eyebrow">AI rental operations</span>
+          <h2>Bạn muốn tìm chỗ ở như thế nào?</h2>
+          <p>Nhập câu hỏi hoặc chọn một test case để bắt đầu.</p>
+        </div>
+        <button class="button ghost" id="refreshHealthBtn" type="button">Kiểm tra kết nối</button>
+      </header>
+
+      <section class="composer-card">
+        <div class="composer-topline">
+          <span class="mode-badge" id="composerModeBadge">ReAct Agent</span>
+          <span id="charCounter">0 ký tự</span>
+        </div>
+        <label class="sr-only" for="queryInput">Câu hỏi cho trợ lý</label>
+        <textarea id="queryInput" rows="4" maxlength="1400" placeholder="Ví dụ: Tìm phòng trọ ở Cầu Giấy dưới 4 triệu mỗi tháng..."></textarea>
+        <div class="composer-footer">
+          <span class="shortcut">Ctrl + Enter để chạy</span>
+          <div class="action-row">
+            <button class="button ghost" id="clearBtn" type="button">Xóa</button>
+            <button class="button primary" id="runBtn" type="button">
+              <span class="run-label">Chạy trợ lý</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="empty-state" id="emptyState">
+        <div class="empty-icon" aria-hidden="true">⌁</div>
+        <h2>Bạn muốn tìm chỗ ở như thế nào?</h2>
+        <p>Nhập câu hỏi hoặc chọn một test case để bắt đầu.</p>
+        <div class="example-grid" id="emptyExamples"></div>
+      </section>
+
+      <section class="loading-panel hidden" id="loadingPanel" aria-live="polite">
+        <div class="loading-header">
+          <span class="pulse-dot"></span>
+          <strong id="loadingTitle">Đang xử lý...</strong>
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        </div>
+        <div class="progress-line"><span></span></div>
+        <div class="skeleton-grid">
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+        </div>
+      </section>
+
+      <section class="error-banner hidden" id="errorBanner" role="alert" aria-live="assertive"></section>
+
+      <section class="answer-card hidden" id="answerCard">
+        <div class="answer-meta">
+          <div>
+            <span class="mode-badge" id="answerModeBadge">Agent</span>
+            <span class="status-badge" id="answerStatusBadge">success</span>
+          </div>
+          <div class="answer-actions">
+            <span id="answerPerf">0 ms · 0 tools</span>
+            <button class="button ghost small" id="copyAnswerBtn" type="button">Sao chép</button>
+          </div>
+        </div>
+        <h2>Final Answer</h2>
+        <div class="answer-text" id="answerText"></div>
+      </section>
+
+      <section class="stats-grid hidden" id="metadataGrid" aria-label="Thông tin thực thi"></section>
+
+      <section class="trace-card hidden" id="traceCard">
+        <div class="trace-toolbar">
+          <div>
+            <span class="eyebrow">Execution trace</span>
+            <h2>ReAct timeline</h2>
+          </div>
+          <div class="trace-controls">
+            <button class="button ghost small" id="expandTraceBtn" type="button">Mở tất cả</button>
+            <button class="button ghost small" id="collapseTraceBtn" type="button">Thu gọn tất cả</button>
+            <button class="button ghost small" id="toggleRawBtn" type="button">Raw JSON</button>
+            <button class="button ghost small" id="hideTraceBtn" type="button">Ẩn trace</button>
+          </div>
+        </div>
+        <div class="timeline" id="traceTimeline"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script>
+    window.__TEST_CASES__ = {{ test_cases | tojson }};
+    window.__INITIAL_HEALTH__ = {
+      provider: {{ provider | tojson }},
+      model: {{ model | tojson }},
+      error: {{ init_error | tojson }}
+    };
+  </script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

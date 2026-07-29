@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Rental ReAct</title>
+  <title>Rental ReAct Console</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -18,12 +18,10 @@
   <div class="app-shell">
     <aside class="sidebar" id="sidebar">
       <div class="brand">
-        <div class="brand-icon" aria-hidden="true">
-          <span></span>
-        </div>
+        <div class="brand-icon" aria-hidden="true"><span></span></div>
         <div>
           <h1>Rental ReAct</h1>
-          <p>AI Rental Assistant</p>
+          <p>Agent console</p>
         </div>
         <button class="icon-button sidebar-close" id="closeSidebarBtn" type="button" aria-label="Đóng menu">×</button>
       </div>
@@ -51,14 +49,14 @@
             <span class="mode-indicator"></span>
             <span class="mode-copy">
               <strong>Baseline</strong>
-              <small>Tư vấn kiến thức chung, không gọi công cụ</small>
+              <small>Trả lời trực tiếp bằng LLM</small>
             </span>
           </button>
           <button class="mode-option" type="button" data-mode="agent" aria-pressed="true">
             <span class="mode-indicator"></span>
             <span class="mode-copy">
               <strong>ReAct Agent</strong>
-              <small>Có thể tìm phòng, kiểm tra lịch và đặt lịch</small>
+              <small>Suy luận, gọi tool, ghi trace</small>
             </span>
           </button>
         </div>
@@ -78,7 +76,7 @@
           <button class="filter-chip" type="button" data-filter="guardrail">Guardrail</button>
         </div>
         <div class="case-list" id="caseList" aria-live="polite"></div>
-        <button class="button secondary full" id="runCaseBtn" type="button">Chạy test case đã chọn</button>
+        <button class="button secondary full" id="runCaseBtn" type="button">Chạy test case</button>
       </section>
 
       <section class="sidebar-card">
@@ -90,11 +88,10 @@
     </aside>
 
     <main class="workspace">
-      <header class="hero">
+      <header class="topbar">
         <div>
           <span class="eyebrow">AI rental operations</span>
-          <h2>Bạn muốn tìm chỗ ở như thế nào?</h2>
-          <p>Nhập câu hỏi hoặc chọn một test case để bắt đầu.</p>
+          <h2>Tìm phòng và kiểm tra trace trong một màn hình</h2>
         </div>
         <button class="button ghost" id="refreshHealthBtn" type="button">Kiểm tra kết nối</button>
       </header>
@@ -118,7 +115,7 @@
       </section>
 
       <section class="empty-state" id="emptyState">
-        <div class="empty-icon" aria-hidden="true">⌁</div>
+        <div class="empty-icon" aria-hidden="true">⌕</div>
         <h2>Bạn muốn tìm chỗ ở như thế nào?</h2>
         <p>Nhập câu hỏi hoặc chọn một test case để bắt đầu.</p>
         <div class="example-grid" id="emptyExamples"></div>
@@ -131,11 +128,6 @@
           <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
         </div>
         <div class="progress-line"><span></span></div>
-        <div class="skeleton-grid">
-          <div class="skeleton-card"></div>
-          <div class="skeleton-card"></div>
-          <div class="skeleton-card"></div>
-        </div>
       </section>
 
       <section class="error-banner hidden" id="errorBanner" role="alert" aria-live="assertive"></section>
@@ -151,7 +143,7 @@
             <button class="button ghost small" id="copyAnswerBtn" type="button">Sao chép</button>
           </div>
         </div>
-        <h2>Final Answer</h2>
+        <h2>Kết quả</h2>
         <div class="answer-text" id="answerText"></div>
       </section>
 
@@ -165,7 +157,7 @@
           </div>
           <div class="trace-controls">
             <button class="button ghost small" id="expandTraceBtn" type="button">Mở tất cả</button>
-            <button class="button ghost small" id="collapseTraceBtn" type="button">Thu gọn tất cả</button>
+            <button class="button ghost small" id="collapseTraceBtn" type="button">Thu gọn</button>
             <button class="button ghost small" id="toggleRawBtn" type="button">Raw JSON</button>
             <button class="button ghost small" id="hideTraceBtn" type="button">Ẩn trace</button>
           </div>

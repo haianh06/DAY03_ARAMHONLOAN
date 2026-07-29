@@ -143,19 +143,19 @@ function setMode(mode) {
 }
 
 function renderQuickPrompts() {
-  const buttons = quickPrompts.map((prompt) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "quick-prompt";
-    button.textContent = prompt;
-    button.addEventListener("click", () => fillPrompt(prompt));
-    return button;
-  });
-  els.quickPrompts.replaceChildren(...buttons);
-  els.emptyExamples.replaceChildren(...buttons.map((node) => node.cloneNode(true)));
-  els.emptyExamples.querySelectorAll("button").forEach((button) => {
-    button.addEventListener("click", () => fillPrompt(button.textContent));
-  });
+  const sidebarButtons = quickPrompts.map((prompt) => promptButton(prompt, "quick-prompt"));
+  const exampleButtons = quickPrompts.map((prompt) => promptButton(prompt, "example-button"));
+  els.quickPrompts.replaceChildren(...sidebarButtons);
+  els.emptyExamples.replaceChildren(...exampleButtons);
+}
+
+function promptButton(prompt, className) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = className;
+  button.textContent = prompt;
+  button.addEventListener("click", () => fillPrompt(prompt));
+  return button;
 }
 
 function fillPrompt(prompt) {
@@ -250,12 +250,8 @@ async function runTestCase() {
 }
 
 async function runRequest(url, payload) {
-  if (state.isRunning) {
-    return;
-  }
-  if (state.currentController) {
-    state.currentController.abort();
-  }
+  if (state.isRunning) return;
+  if (state.currentController) state.currentController.abort();
 
   state.currentController = new AbortController();
   const timeoutId = window.setTimeout(() => state.currentController.abort(), 70000);
@@ -306,7 +302,7 @@ function renderFinalAnswer(result, testCase) {
   els.answerText.replaceChildren();
   if (testCase) {
     const note = document.createElement("p");
-    note.className = "case-question";
+    note.className = "case-question answer-note";
     note.textContent = `Test case #${testCase.id}: ${testCase.question}`;
     els.answerText.appendChild(note);
   }
@@ -419,21 +415,15 @@ function createStepCard(step) {
   body.className = "step-body";
   body.appendChild(traceText("Thought", parsed.thought || "Không ghi nhận."));
 
-  if (step.action) {
-    body.appendChild(traceText("Action", step.action));
-  }
+  if (step.action) body.appendChild(traceText("Action", step.action));
   if (step.action_input && Object.keys(step.action_input).length) {
     body.appendChild(actionInputTable(step.action_input));
   }
   if (step.observation !== null && step.observation !== undefined) {
     body.appendChild(observationBlock(step.observation));
   }
-  if (step.error) {
-    body.appendChild(traceText("Error", step.error, "error"));
-  }
-  if (parsed.finalAnswer) {
-    body.appendChild(traceText("Final Answer", parsed.finalAnswer, "observation"));
-  }
+  if (step.error) body.appendChild(traceText("Error", step.error, "error"));
+  if (parsed.finalAnswer) body.appendChild(traceText("Final Answer", parsed.finalAnswer, "observation"));
 
   const raw = traceText("Raw JSON", JSON.stringify(step, null, 2));
   raw.classList.add("raw-json");
@@ -488,14 +478,8 @@ function formatArgValue(key, value) {
     span.textContent = formatCurrency(Number(value));
     return span;
   }
-  if (String(value).match(/^PROP-\d+$/i)) {
-    span.className = "property-id";
-  }
-  if (Array.isArray(value)) {
-    span.textContent = value.join(", ");
-  } else {
-    span.textContent = String(value);
-  }
+  if (String(value).match(/^PROP-\d+$/i)) span.className = "property-id";
+  span.textContent = Array.isArray(value) ? value.join(", ") : String(value);
   return span;
 }
 
@@ -563,9 +547,7 @@ function parseRentalCards(text) {
       continue;
     }
     const detailMatch = line.match(/^Chi tiết tin \[(PROP-\d+)\]\s+-\s+(.+):/);
-    if (detailMatch) {
-      cards.push({id: detailMatch[1], title: detailMatch[2], status: "Chi tiết"});
-    }
+    if (detailMatch) cards.push({id: detailMatch[1], title: detailMatch[2], status: "Chi tiết"});
   }
   return cards;
 }
@@ -725,15 +707,9 @@ function guardrailLabel(value) {
 }
 
 function guardrailExplanation(value) {
-  if (value === "prompt_injection") {
-    return "Yêu cầu cố thay đổi vai trò hệ thống đã bị từ chối.";
-  }
-  if (value === "repeated_action") {
-    return "Agent cố gọi lại cùng một tool với cùng tham số.";
-  }
-  if (value === "max_iterations") {
-    return "Agent đã dùng hết số vòng xử lý an toàn.";
-  }
+  if (value === "prompt_injection") return "Yêu cầu cố thay đổi vai trò hệ thống đã bị từ chối.";
+  if (value === "repeated_action") return "Agent cố gọi lại cùng một tool với cùng tham số.";
+  if (value === "max_iterations") return "Agent đã dùng hết số vòng xử lý an toàn.";
   return "Guardrail đã được kích hoạt.";
 }
 
